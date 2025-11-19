@@ -1,0 +1,19 @@
+# Convers IA – Fly.io configuration
+
+app = "conversia-server"
+primary_region = "gru"
+
+[env]
+PORT = "10000"
+
+[[services]]
+internal_port = 10000
+protocol = "tcp"
+
+  [[services.ports]]
+  port = 80
+  handlers = ["http"]
+
+  [[services.ports]]
+  port = 443
+  handlers = ["tls", "http"]
