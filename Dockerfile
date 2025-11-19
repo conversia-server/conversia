@@ -18,16 +18,17 @@ RUN apk update && apk add --no-cache \
 
 # Define variáveis para o Puppeteer/WWebJS usar o Chromium instalado
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
-ENV CHROME_PATH=/usr/bin/chromium-browser
-ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
+ENV CHROME_PATH=/usr/bin/chromium
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 
 # Diretório de trabalho
 WORKDIR /app
 
-# Copia arquivos
+# Copia arquivos de dependências
 COPY package*.json ./
 RUN npm install
 
+# Copia todo o restante
 COPY . .
 
 EXPOSE 10000
