@@ -1,19 +1,23 @@
-# Convers IA – Fly.io configuration
+# fly.toml app configuration file generated for conversia on 2025-11-19T14:15:20Z
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
 
-app = "conversia-server"
-primary_region = "gru"
+app = 'conversia'
+primary_region = 'gru'
 
-[env]
-PORT = "10000"
+[build]
 
-[[services]]
-internal_port = 10000
-protocol = "tcp"
+[http_service]
+  internal_port = 10000
+  force_https = true
+  auto_stop_machines = 'stop'
+  auto_start_machines = true
+  min_machines_running = 0
+  processes = ['app']
 
-  [[services.ports]]
-  port = 80
-  handlers = ["http"]
-
-  [[services.ports]]
-  port = 443
-  handlers = ["tls", "http"]
+[[vm]]
+  memory = '1gb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 1024
