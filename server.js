@@ -2,7 +2,7 @@
 // Convers IA – Servidor oficial
 // WhatsApp multi-instância + Flow Builder + Automação
 // SUPORTE MULTI-SITE + RESET HARD (#reset)
-// Fly.io READY (Chromium OK)
+// Fly.io READY
 // =====================================================
 
 import express from "express";
@@ -29,7 +29,6 @@ app.use(
     allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
-
 app.options("*", cors());
 
 // =====================================================
@@ -87,7 +86,7 @@ const sessionsDir = path.join(process.cwd(), "sessions");
 if (!fs.existsSync(sessionsDir)) fs.mkdirSync(sessionsDir, { recursive: true });
 
 // =====================================================
-// REGISTRAR CONVERSA
+// REGISTRAR CONVERSA INICIADA
 // =====================================================
 
 async function registerConversationStarted(clientId, phone) {
@@ -100,7 +99,10 @@ async function registerConversationStarted(clientId, phone) {
     await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ phone, timestamp: new Date().toISOString() }),
+      body: JSON.stringify({
+        phone,
+        timestamp: new Date().toISOString(),
+      }),
     });
 
     console.log(`📩 Conversa registrada (${clientId} - ${phone})`);
@@ -110,7 +112,7 @@ async function registerConversationStarted(clientId, phone) {
 }
 
 // =====================================================
-// INICIAR WHATSAPP CLIENT
+// INICIAR CLIENTE WHATSAPP
 // =====================================================
 
 async function startClient(rawId) {
@@ -129,6 +131,7 @@ async function startClient(rawId) {
   const client = new Client({
     authStrategy: new LocalAuth({ clientId, dataPath: clientPath }),
 
+    // *** CONFIGURAÇÃO 100% COMPATÍVEL COM FLY.IO ***
     puppeteer: {
       headless: true,
       executablePath: process.env.CHROME_PATH || "/usr/bin/chromium",
@@ -141,24 +144,21 @@ async function startClient(rawId) {
         "--single-process",
         "--no-zygote",
         "--no-first-run",
-        "--disable-software-rasterizer",
-        "--use-gl=disabled",
         "--disable-background-timer-throttling",
-        "--disable-backgrounding-occluded-windows",
-        "--disable-renderer-backgrounding"
-      ],
-    },
+        "--disable-renderer-backgrounding",
+        "--disable-backgrounding-occluded-windows"
+      ]
+    }
   });
 
   console.log("👂 Listener de mensagens registrado para:", clientId);
 
   client.on("message_create", (msg) => {
-    console.log("📩 Evento message_create disparou:", msg.body);
+    console.log("📩 Evento message_create:", msg.body);
   });
 
   client.on("message", (msg) => {
     console.log(`💬 Mensagem recebida de ${msg.from}: ${msg.body}`);
-
     handleIncomingMessage(clientId, msg).catch((e) =>
       console.error("❌ Erro handleIncoming:", e.message)
     );
@@ -183,11 +183,10 @@ async function startClient(rawId) {
   });
 
   client.on("disconnected", () => {
-    console.log(`🔴 Cliente desconectado (${clientId}), reiniciando...`);
+    console.log(`🔴 Cliente desconectado (${clientId}) — reiniciando...`);
     delete clients[clientId];
     delete qrCodes[clientId];
-
-    setTimeout(() => startClient(clientId), 7000);
+    setTimeout(() => startClient(clientId), 6000);
   });
 
   try {
@@ -235,83 +234,14 @@ app.all("/wp-json/convers-ia/v1/connect", (req, res) => {
 });
 
 // =====================================================
-// CARREGAR AUTOMAÇÕES
-// =====================================================
-
-async function loadAutomations(clientId) {
-  const cfg = siteConfig[clientId];
-
-  if (!cfg?.automations_endpoint) {
-    console.warn(`⚠️ Nenhum automations_endpoint configurado (${clientId})`);
-    return;
-  }
-
-  if (!isValidHttpUrl(cfg.automations_endpoint)) {
-    console.warn(`⚠️ Endpoint inválido (${clientId}): ${cfg.automations_endpoint}`);
-    return;
-  }
-
-  try {
-    const data = await safeFetchJson(cfg.automations_endpoint, { method: "GET" }, 9000);
-
-    if (!Array.isArray(data)) {
-      console.error(`❌ Automations inválidas (${clientId}):`, data);
-      return;
-    }
-
-    const flows = data.filter(f => f.is_active == 1 && f.flow_data);
-    const map = {};
-
-    flows.forEach(f => (map[f.id] = f));
-    activeFlows[clientId] = map;
-
-    cfg.lastLoadAt = new Date().toISOString();
-    console.log(`🧩 Fluxos carregados (${clientId}): ${flows.length}`);
-
-  } catch (e) {
-    console.error(`❌ Falha ao carregar automações (${clientId}):`, e.message);
-  }
-}
-
-// Auto reload flows
-setInterval(() => {
-  Object.keys(siteConfig).forEach(cid => {
-    if (siteConfig[cid]?.automations_endpoint)
-      loadAutomations(cid).catch(() => {});
-  });
-}, 60000);
-
-// =====================================================
-// FUNÇÕES DE EXECUÇÃO
-// =====================================================
-
-// ... (restante igual ao seu, não alterei nada para não quebrar lógica)
-
-async function runAutomatedForward(clientId, phone, block, blocks) {
-  const client = clients[clientId];
-  if (!client) return;
-
-  while (block && block.type === "mensagem" && block.next) {
-    const next = blocks.find(b => b.id === block.next);
-    if (!next) break;
-
-    block = next;
-    conversationState[clientId][phone].block = block.id;
-
-    await client.sendMessage(phone, block.content || "");
-  }
-}
-
-// =====================================================
 // START SERVER
 // =====================================================
 
 const PORT = process.env.PORT || 10000;
-
 app.listen(PORT, () => {
   console.log(`🚀 Convers IA rodando na porta ${PORT}`);
 });
 
 app.get("/", (req, res) => {
-  res.send("Convers IA server is running");
+  res.send("Convers IA server is running.");
 });
