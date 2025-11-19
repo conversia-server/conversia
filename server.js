@@ -423,3 +423,7 @@ const PORT = process.env.PORT || 10000;
 app.listen(PORT, () => {
   console.log(`🚀 Convers IA rodando na porta ${PORT}`);
 });
+
+app.get("/", (req, res) => {
+  res.send("Convers IA server is running");
+});
