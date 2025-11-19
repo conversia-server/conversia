@@ -1,41 +1,32 @@
+# =========================================
 # Convers IA – Dockerfile para Fly.io
+# =========================================
 
-FROM node:18-slim
+FROM node:18-alpine
 
-# Configurações essenciais
-ENV NODE_ENV production
+# Atualiza e instala Chromium + dependências
+RUN apk update && apk add --no-cache \
+  chromium \
+  chromium-chromedriver \
+  udev \
+  ttf-freefont \
+  nss \
+  harfbuzz \
+  ca-certificates \
+  bash \
+  git
+
+# Define variáveis para o Puppeteer/WWebJS usar o Chromium instalado
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+ENV CHROME_PATH=/usr/bin/chromium-browser
+ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 
-# Instalar dependências do Chromium (whatsapp-web.js)
-RUN apt-get update && apt-get install -y \
-    chromium \
-    chromium-driver \
-    ca-certificates \
-    fonts-liberation \
-    libatk1.0-0 \
-    libnspr4 \
-    libnss3 \
-    libx11-6 \
-    libx11-xcb1 \
-    libxcomposite1 \
-    libxcursor1 \
-    libxdamage1 \
-    libxext6 \
-    libxfixes3 \
-    libxi6 \
-    libxrandr2 \
-    libxrender1 \
-    libxss1 \
-    libxtst6 \
-    libglib2.0-0 \
-    && rm -rf /var/lib/apt/lists/*
-
-# Criar diretório do app
+# Diretório de trabalho
 WORKDIR /app
 
-# Copiar arquivos
+# Copia arquivos
 COPY package*.json ./
-RUN npm install --omit=dev
+RUN npm install
 
 COPY . .
 
