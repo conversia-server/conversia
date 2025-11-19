@@ -24,11 +24,10 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 # Diretório de trabalho
 WORKDIR /app
 
-# Copia arquivos de dependências
+# Copia arquivos
 COPY package*.json ./
 RUN npm install
 
-# Copia todo o restante
 COPY . .
 
 EXPOSE 10000
