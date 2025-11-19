@@ -1,0 +1,27 @@
+# ============================
+# Convers IA — Dockerfile Fly.io
+# Node 18 LTS
+# ============================
+FROM node:18-slim
+
+# Evita problemas de timezone
+ENV TZ=America/Sao_Paulo
+
+# Cria diretório da aplicação
+WORKDIR /app
+
+# Copia arquivos package e instala dependências
+COPY package*.json ./
+RUN npm install --production
+
+# Copia o projeto
+COPY . .
+
+# Certifica que as pastas existem
+RUN mkdir -p /app/sessions
+
+# Porta usada pelo Fly
+EXPOSE 10000
+
+# Comando de inicialização
+CMD ["npm", "start"]
