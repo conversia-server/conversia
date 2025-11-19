@@ -130,8 +130,11 @@ async function startClient(rawId) {
 
   const client = new Client({
     authStrategy: new LocalAuth({ clientId, dataPath: clientPath }),
+
+    // *** PUPPETEER CORRIGIDO PARA FLY.IO ***
     puppeteer: {
       headless: true,
+      executablePath: process.env.CHROME_PATH || "/usr/bin/chromium-browser",
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
@@ -140,9 +143,14 @@ async function startClient(rawId) {
         "--disable-gpu",
         "--single-process",
         "--no-zygote",
-      ],
-    },
+        "--no-first-run",
+        "--disable-background-timer-throttling",
+        "--disable-backgrounding-occluded-windows",
+        "--disable-renderer-backgrounding"
+      ]
+    }
   });
+
 
   // =====================================================
   // LOG EXTRA — INDICA QUE OS LISTENERS FORAM REGISTRADOS
